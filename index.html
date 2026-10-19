@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Study Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Source+Serif+4:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f9;--surface:#fff;--ink:#14213d;--muted:#5b6785;--line:#d5dcec;--accent:#2f4bd6;--on-accent:#fff;--hi:#ffd84d;--on-hi:#14213d;--good:#1c7a4a;--bad:#b3261e;color-scheme:light;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1526;--surface:#182038;--ink:#eaf0ff;--muted:#9aa8cc;--line:#2b3556;--accent:#8ea2ff;--on-accent:#0f1526;--good:#5fd391;--bad:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1526;--surface:#182038;--ink:#eaf0ff;--muted:#9aa8cc;--line:#2b3556;--accent:#8ea2ff;--on-accent:#0f1526;--good:#5fd391;--bad:#ff8a80;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1.05rem/1.6 "Source Serif 4",Georgia,serif}
+main{max-width:46rem;margin:0 auto;padding:1.5rem 1.1rem 4rem}
+h1,h2,h3,button,label,.meta{font-family:"Bricolage Grotesque",system-ui,sans-serif}
+h1{font-size:2.2rem;line-height:1.1;margin:.4rem 0 .3rem;letter-spacing:-.02em}
+.lead{color:var(--muted);margin:0 0 1.2rem;max-width:36rem}
+textarea{width:100%;min-height:11rem;resize:vertical;padding:.9rem 1rem;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:1rem}
+textarea:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;margin:.8rem 0}
+button{font-weight:500;font-size:.98rem;padding:.6rem 1rem;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+button:disabled{opacity:.5;cursor:default}
+.meta{color:var(--muted);font-size:.92rem;margin:.4rem 0}
+#status{min-height:1.5rem}
+.panel{margin-top:1.6rem}
+.card{display:flex;align-items:center;justify-content:center;width:100%;min-height:13rem;padding:1.6rem;text-align:center;font:600 1.4rem/1.4 "Source Serif 4",Georgia,serif;background:var(--surface);color:var(--ink);border:2px solid var(--ink);border-radius:14px;box-shadow:6px 6px 0 var(--accent)}
+.card.back{background:var(--hi);color:var(--on-hi);border-color:var(--on-hi);font-weight:400}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:.6rem 0 1rem}
+.bar i{display:block;height:100%;background:var(--accent)}
+.notes h2{font-size:1.7rem;margin:.2rem 0 .6rem}
+.notes h3{font-size:1.15rem;margin:1.5rem 0 .3rem;padding-top:.6rem;border-top:1.5px solid var(--line)}
+.notes ul{margin:.3rem 0;padding-left:1.25rem}
+.notes li{margin:.25rem 0}
+.sum{background:var(--surface);border-left:5px solid var(--hi);padding:.7rem 1rem;border-radius:0 8px 8px 0}
+dl{display:grid;grid-template-columns:max-content 1fr;gap:.35rem 1rem;margin:.4rem 0}
+dt{font:700 1rem "Bricolage Grotesque",system-ui,sans-serif}
+dd{margin:0}
+.q{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:1rem;margin:0 0 1rem}
+.q p{margin:0 0 .6rem;font-weight:600}
+.opt{display:block;width:100%;text-align:left;margin:.3rem 0}
+.opt.ok{border-color:var(--good);color:var(--good);font-weight:700}
+.opt.no{border-color:var(--bad);color:var(--bad)}
+.why{color:var(--muted);margin:.5rem 0 0;font-size:.95rem}
+[hidden]{display:none!important}
+@media (max-width:520px){h1{font-size:1.8rem}.card{font-size:1.2rem;min-height:11rem}}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .25s}}
+</style>
+</head>
+<body>
+<main>
+<h1>Study Studio</h1>
+<p class="lead">Paste your notes, then turn them into flashcards, a cleaner study sheet or a quick quiz.</p>
+
+<label for="notes" class="meta">Your notes</label>
+<textarea id="notes" placeholder="Paste or type your notes here. Lines like “Proton: positive particle in the nucleus” make the best flashcards."></textarea>
+<div class="row">
+  <button class="primary" id="bCards">Make flashcards</button>
+  <button id="bNotes">Improve my notes</button>
+  <button id="bQuiz">Quiz me</button>
+  <button id="bEx">Try an example</button>
+</div>
+<p class="meta" id="status" role="status"></p>
+
+<section class="panel" id="pCards" hidden></section>
+<section class="panel notes" id="pNotes" hidden></section>
+<section class="panel" id="pQuiz" hidden></section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+let sample = true, cards = [], idx = 0, flipped = false, known = new Set();
+
+const EXAMPLE = "Proton: positive particle in the nucleus. Its number is the atomic number.\nNeutron: neutral particle in the nucleus that adds mass.\nElectron: negative particle in shells around the nucleus.\nIn a neutral atom, protons = electrons.\nElement: a substance made of one type of atom.\nCompound: two or more elements chemically joined.\nMixture: substances physically mixed, not bonded.\nKinetic energy: energy of moving objects.\nPotential energy: stored energy, such as gravitational, chemical or elastic.\nLaw of conservation of energy: energy cannot be created or destroyed, only transformed.";
+
+function status(t) { $("#status").textContent = t || ""; }
+function show(id) { for (const p of ["pCards", "pNotes", "pQuiz"]) $("#" + p).hidden = p !== id; }
+function busy(on) { for (const b of document.querySelectorAll(".row button")) b.disabled = on; }
+
+async function ai(instruction, notes) {
+  const r = await fetch("/.netlify/functions/ai", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt: instruction + "\nReturn ONLY valid JSON, no code fences.\n\nNOTES:\n" + notes })
+  });
+  if (!r.ok) throw new Error("ai " + r.status);
+  const d = await r.json();
+  return JSON.parse(String(d.text).replace(/```json|```/g, "").trim());
+}
+
+function parse(t) {
+  return t.split("\n").map(l => l.replace(/^[\s*\-•\d.]+/, "").trim()).filter(Boolean).map(l => {
+    const m = l.match(/^(.{2,60}?)\s*(?::|\s-\s|\s=\s|–|—)\s*(.+)$/);
+    return m ? { q: "Define: " + m[1], a: m[2] } : null;
+  }).filter(Boolean);
+}
+
+function getNotes() {
+  const n = $("#notes").value.trim();
+  if (n.length < 20) { status("Add a few lines of notes first."); return null; }
+  return n;
+}
+
+async function run(kind) {
+  const n = getNotes(); if (!n) return;
+  status(sample ? "Working on it…" : ""); busy(true);
+  try {
+    if (kind === "cards") {
+      let list;
+      try {
+        list = await ai('Turn these study notes into 12 to 20 flashcards. Questions are short and specific; answers are under 25 words. Format: [{"q":"","a":""}]', n);
+      } catch (e) { list = parse(n); if (sample) status("The AI step failed, so I used a simple reader instead."); }
+      if (!Array.isArray(list) || !list.length) { status("No flashcards found. Try lines like “Term: meaning”."); return; }
+      cards = list.filter(c => c && c.q && c.a); idx = 0; flipped = false; known = new Set();
+      drawCards(); show("pCards"); if (sample) status("");
+    } else if (kind === "notes") {
+      const d = await ai('Rewrite these study notes so they are clearer and easier to revise. Format: {"title":"","summary":"2 sentences","sections":[{"heading":"","points":["short bullet"]}],"terms":[{"term":"","meaning":""}]}', n);
+      drawNotes(d); show("pNotes"); status("");
+    } else {
+      const d = await ai('Write 6 multiple-choice questions testing these notes, 4 options each, one correct. Format: [{"q":"","options":["","","",""],"answer":0,"why":"one sentence"}] where answer is the index of the correct option.', n);
+      drawQuiz(d); show("pQuiz"); status("");
+    }
+  } catch (e) {
+    status(sample ? "That didn’t work. Try again in a moment." : "This feature needs AI, which isn’t available in this view.");
+  } finally { busy(false); }
+}
+
+function drawCards() {
+  const p = $("#pCards"); p.replaceChildren();
+  const c = cards[idx];
+  p.append(el("p", "meta", `Card ${idx + 1} of ${cards.length}. ${known.size} marked as known.`));
+  const bar = el("div", "bar"), fill = el("i"); fill.style.width = (known.size / cards.length * 100) + "%"; bar.append(fill); p.append(bar);
+  const card = el("button", "card" + (flipped ? " back" : ""), flipped ? c.a : c.q);
+  card.setAttribute("aria-label", (flipped ? "Answer: " : "Question: ") + (flipped ? c.a : c.q) + ". Press to flip.");
+  card.onclick = flip; p.append(card);
+  const r = el("div", "row");
+  const mk = (t, f, cls) => { const b = el("button", cls || "", t); b.onclick = f; r.append(b); };
+  mk("Back", () => go(-1)); mk("Flip", flip); mk("Next", () => go(1));
+  mk("Still learning", () => { known.delete(idx); go(1); });
+  mk("I know it", () => { known.add(idx); go(1); }, "primary");
+  mk("Shuffle", () => { cards.sort(() => Math.random() - .5); idx = 0; flipped = false; known = new Set(); drawCards(); });
+  p.append(r);
+}
+function flip() { flipped = !flipped; drawCards(); }
+function go(d) { idx = (idx + d + cards.length) % cards.length; flipped = false; drawCards(); }
+
+function drawNotes(d) {
+  const p = $("#pNotes"); p.replaceChildren();
+  p.append(el("h2", "", d.title || "Study notes"));
+  if (d.summary) p.append(el("p", "sum", d.summary));
+  for (const s of d.sections || []) {
+    p.append(el("h3", "", s.heading));
+    const ul = el("ul"); for (const pt of s.points || []) ul.append(el("li", "", pt)); p.append(ul);
+  }
+  if ((d.terms || []).length) {
+    p.append(el("h3", "", "Key terms"));
+    const dl = el("dl"); for (const t of d.terms) { dl.append(el("dt", "", t.term)); dl.append(el("dd", "", t.meaning)); } p.append(dl);
+  }
+}
+
+function drawQuiz(list) {
+  const p = $("#pQuiz"); p.replaceChildren();
+  if (!Array.isArray(list) || !list.length) { p.append(el("p", "", "No questions came back. Try again.")); return; }
+  let score = 0, done = 0;
+  const tally = el("p", "meta", `Score: 0 of ${list.length}`);
+  p.append(tally);
+  list.forEach(q => {
+    const box = el("div", "q"); box.append(el("p", "", q.q));
+    const why = el("p", "why"); why.hidden = true;
+    const btns = (q.options || []).map((o, i) => {
+      const b = el("button", "opt", o);
+      b.onclick = () => {
+        btns.forEach((x, j) => { x.disabled = true; if (j === q.answer) x.classList.add("ok"); });
+        if (i === q.answer) score++; else b.classList.add("no");
+        done++; why.textContent = q.why || ""; why.hidden = false;
+        tally.textContent = done === list.length ? `Finished: ${score} of ${list.length} correct.` : `Score: ${score} of ${list.length}`;
+      };
+      box.append(b); return b;
+    });
+    box.append(why); p.append(box);
+  });
+}
+
+$("#bCards").onclick = () => run("cards");
+$("#bNotes").onclick = () => run("notes");
+$("#bQuiz").onclick = () => run("quiz");
+$("#bEx").onclick = () => { $("#notes").value = EXAMPLE; status("Example loaded. Choose what to make."); };
+document.addEventListener("keydown", e => {
+  if (!cards.length || $("#pCards").hidden || /TEXTAREA|INPUT/.test(document.activeElement.tagName)) return;
+  if (e.key === "ArrowRight") go(1); else if (e.key === "ArrowLeft") go(-1);
+  else if (e.key === " " && document.activeElement.className.indexOf("card") < 0) { e.preventDefault(); flip(); }
+});
+</script>
+</body>
+</html>
